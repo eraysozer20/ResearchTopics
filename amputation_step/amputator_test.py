@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 # Step 1: Load an image from the MNIST dataset
 def load_mnist_image():
     (x_train, _), (_, _) = mnist.load_data()
+    # Choose the first image in the dataset for demonstration
     image = x_train[1]
     return image
 
@@ -40,23 +41,33 @@ def rotate_image(image, angle=-20):
 
 
 # Step 4: Remove Pixels with Gradient (more on the sides of the image)
-def remove_pixels_with_gradient(image, side_width=7):
+def remove_pixels_with_gradient(image, side_width=12):
     rows, cols = image.shape
-    masked_image = image.copy()
+    # Convert image to float to handle NaN values
+    masked_image = image.astype(np.float32).copy()
 
     # Create a gradient mask for the left side
     left_gradient = np.linspace(0, 1, rows).reshape(rows, 1)
     left_mask = np.tile(left_gradient, (1, side_width))
     left_mask = left_mask > np.random.rand(rows, side_width)
-    masked_image[:, :side_width][left_mask] = 0
+    # Only remove non-black pixels
+    masked_image[:, :side_width][
+        left_mask & (masked_image[:, :side_width] != 0)
+    ] = np.nan
 
     # Create a slight mask for the top side
     top_mask = np.random.rand(side_width, cols) < 0.2
-    masked_image[:side_width, :][top_mask] = 0
+    # Only remove non-black pixels
+    masked_image[:side_width, :][
+        top_mask & (masked_image[:side_width, :] != 0)
+    ] = np.nan
 
     # Create a slight mask for the bottom side
     bottom_mask = np.random.rand(side_width, cols) < 0.2
-    masked_image[-side_width:, :][bottom_mask] = 0
+    # Only remove non-black pixels
+    masked_image[-side_width:, :][
+        bottom_mask & (masked_image[-side_width:, :] != 0)
+    ] = np.nan
 
     return masked_image
 
@@ -96,7 +107,7 @@ def transform_mnist_image():
     plt.imshow(rotated_image, cmap="gray")
     plt.subplot(1, 5, 4)
     plt.title("Random Pixels Removed")
-    plt.imshow(masked_image, cmap="gray")
+    plt.imshow(masked_image, cmap="Blues")
     plt.subplot(1, 5, 5)
     plt.title("Moiré Pattern Added")
     plt.imshow(final_image, cmap="gray")
